@@ -1,3 +1,4 @@
+*.sqlite
 .svn
 .dropbox
 .DS_Store
