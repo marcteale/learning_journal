@@ -1,8 +1,10 @@
 from sqlalchemy import (
     Column,
+    DateTime,
     Index,
     Integer,
     Text,
+    String,
     )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,14 +16,36 @@ from sqlalchemy.orm import (
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
+import datetime
+
+
+def now():
+    return datetime.datetime.now()
+
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
-class MyModel(Base):
-    __tablename__ = 'models'
+class Entry(Base):
+    __tablename__ = 'entries'
     id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    value = Column(Integer)
+    title = Column(String(255), nullable=False, unique=True)
+    body = Column(Text, nullable=True)
+    created = Column(DateTime, default=now)
+    edited = Column(DateTime, default=now, onupdate=now)
 
-Index('my_index', MyModel.name, unique=True, mysql_length=255)
+    @classmethod
+    def all(cls, session=None):
+        if session is None:
+            session = DBSession
+        return session.query(cls).order_by(cls.created).all()
+
+    @classmethod
+    def by_id(cls, id, session=None):
+        if session is None:
+            session = DBSession
+        return session.query(cls).get(id)
+
+
+Index('entries_index', Entry.created)
