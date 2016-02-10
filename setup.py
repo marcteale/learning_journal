@@ -16,6 +16,7 @@ requires = [
     'pyramid_tm',
     'transaction',
     'waitress',
+    'wtforms',
     'zope.sqlalchemy',
     ]
 

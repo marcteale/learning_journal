@@ -1,13 +1,13 @@
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
-from pyramid.view import view_config
-
-from sqlalchemy.exc import DBAPIError
-
+from .forms import EntryCreateForm
 from .models import (
     DBSession,
     Entry,
     )
+from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPNotFound
+# from pyramid.response import Response
+from pyramid.view import view_config
+# from sqlalchemy.exc import DBAPIError
 
 
 @view_config(route_name='home', renderer='templates/list.jinja2')
@@ -25,9 +25,16 @@ def view(request):
     return {'entry': entry}
 
 
-@view_config(route_name='action', match_param='action=create', renderer='string')
+@view_config(route_name='action', match_param='action=create',
+             renderer='templates/edit.jinja2')
 def create(request):
-    return 'create page'
+    entry = Entry()
+    form = EntryCreateForm(request.POST)
+    if request.method == 'POST' and form.validate():
+        form.populate_obj(entry)
+        DBSession.add(entry)
+        return HTTPFound(location=request.route_url('home'))
+    return {'form': form, 'action': request.matchdict.get('action')}
 
 
 @view_config(route_name='action', match_param='action=edit', renderer='string')
