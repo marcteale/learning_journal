@@ -1,3 +1,4 @@
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 from pyramid.view import view_config
 
@@ -5,18 +6,33 @@ from sqlalchemy.exc import DBAPIError
 
 from .models import (
     DBSession,
-    MyModel,
+    Entry,
     )
 
 
-@view_config(route_name='home', renderer='templates/mytemplate.pt')
-def my_view(request):
-    try:
-        one = DBSession.query(MyModel).filter(MyModel.name == 'one').first()
-    except DBAPIError:
-        return Response(conn_err_msg, content_type='text/plain', status_int=500)
-    return {'one': one, 'project': 'learning_journal'}
+@view_config(route_name='home', renderer='templates/list.jinja2')
+def index_page(request):
+    entries = Entry.all()
+    return {'entries': entries}
 
+
+@view_config(route_name="detail", renderer="templates/detail.jinja2")
+def view(request):
+    this_id = request.matchdict.get('id', -1)
+    entry = Entry.by_id(this_id)
+    if not entry:
+        return HTTPNotFound()
+    return {'entry': entry}
+
+
+@view_config(route_name='action', match_param='action=create', renderer='string')
+def create(request):
+    return 'create page'
+
+
+@view_config(route_name='action', match_param='action=edit', renderer='string')
+def update(request):
+    return 'edit page'
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem
@@ -33,4 +49,3 @@ might be caused by one of the following things:
 After you fix the problem, please restart the Pyramid application to
 try it again.
 """
-
