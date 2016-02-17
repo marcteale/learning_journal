@@ -1,3 +1,4 @@
+from passlib.context import CryptContext
 import datetime
 from sqlalchemy import (
     Column,
@@ -21,6 +22,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
+password_context = CryptContext(schemes=['pbkdf2_sha512'])
 
 
 class MyModel(Base):
@@ -70,3 +72,6 @@ class User(Base):
         if session is None:
             session = DBSession
         return DBSession.query(cls).filter(cls.name == name).first()
+
+    def verify_password(self, password):
+        return password_context.verify(password, self.password)

@@ -13,9 +13,11 @@ from pyramid.scripts.common import parse_vars
 
 from ..models import (
     DBSession,
-    Entry,
     Base,
     )
+
+from learning_journal.models import password_context
+from learning_journal.models import User
 
 
 def usage(argv):
@@ -36,5 +38,6 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        model = Entry(title='This is my title.')
-        DBSession.add(model)
+        encrypted = password_context.encrypt('admin')
+        admin = User(name='admin', password=encrypted)
+        DBSession.add(admin)
